@@ -1,0 +1,49 @@
+from __future__ import with_statement
+__license__ = 'GPL 3'
+__copyright__ = '2014, Amit <amitkp.ias@gmail.com>'
+
+from calibre.web.feeds.news import BasicNewsRecipe
+
+class My_Feeds(BasicNewsRecipe):
+    title                  = 'Down To Earth'
+    language                = 'en_IN'
+    oldest_article         = 20
+    __author__             = 'Amit'
+    max_articles_per_feed  = 100
+    no_stylesheets            = True
+    remove_javascript        = True
+    center_navbar            = True
+    use_embedded_content   = False
+    remove_empty_feeds     = True
+    reverse_article_order = True
+    publisher              = 'downtoearth.org.in'
+    keep_only_tags = [dict(attrs={'class':['print-title', 'print-content']})]
+    #remove_tags_before        = [dict(name='h1'),{'class':'print-title'}]
+    #remove_tags_after        = [dict(name='div'),{'class':'print-content'}]
+    #remove_tags            =[#dict(id=['comments','breadcrumb','node_related_stories']),
+                            #dict(attrs={'class':['print-hr', 'box']})]
+    remove_tags = [dict(attrs={'class':['field field-type-text field-field-see-also']})]
+                            
+    extra_css = '''
+                    div.field.field-type-userreference.field-field-authors{ font-size: 60%; text-align: right;}
+                    div.field.field-type-date.field-field-issuedate{ font-size: 60%; text-align: right;}
+                    div.field.field-type-text.field-field-intro{ font-size: 70%; font-style: italic; }
+                    body{font-family: Arial,Helvetica,sans-serif}
+                    .caption { font-size: 60%; font-style: italic; }
+                '''
+    def print_version(self,url):
+        """Extract the print url from the article"""
+        soup = self.index_to_soup(url)
+        lnk = soup.find("a",{"class":"print-page",})
+        url = lnk["href"]
+        return url
+    
+    feeds          = [(u'cover story', u'http://www.downtoearth.org.in/taxonomy/term/20345/0/feed'),
+                    (u'editor', u'http://www.downtoearth.org.in/taxonomy/term/20348/0/feed'),                     
+                    (u'special report', u'http://www.downtoearth.org.in/taxonomy/term/20384/0/feed'), 
+                    (u'features', u'http://www.downtoearth.org.in/taxonomy/term/20350/0/feed'), 
+                    (u'news', u'http://www.downtoearth.org.in/taxonomy/term/20366/0/feed'), 
+                    (u'debate', u'http://www.downtoearth.org.in/taxonomy/term/20347/0/feed'), 
+                    (u'natural disasters', u'http://www.downtoearth.org.in/taxonomy/term/20822/0/feed')
+                    ]
+

@@ -1,0 +1,51 @@
+from __future__ import with_statement
+__license__ = 'GPL 3'
+__copyright__ = '2014, Amit <amitkp.ias@gmail.com>'
+
+from calibre.web.feeds.news import BasicNewsRecipe
+import string
+
+
+class My_Feeds(BasicNewsRecipe):
+    title                 = 'My Daily Feeds'
+    language = 'en_IN'
+    oldest_article        = 1.2
+    __author__            = 'Amit'
+    max_articles_per_feed = 100
+    no_stylesheets = True
+    remove_javascript      = True
+    center_navbar = True
+    remove_empty_feeds     = True
+    reverse_article_order = True
+
+    feeds = [('C - BS - Edi', 'http://www.business-standard.com/rss/opinion-editorial-10501.rss'),
+        ('C - BS - Col','http://www.business-standard.com/rss/opinion-columns-10502.rss'),
+        ('Insightsonindia', 'http://insightsonindia.com/feed/'),
+        ]
+    
+    
+    def print_version(self, url):
+        Finished = 0
+        if (url.find("indianexpress") != -1):
+            url = url + '/99/'
+            Finished = 0
+        if (url.find('economictimes.indiatimes.com') != -1):
+            url = url + '?prtpage=1'
+            Finished = 1
+        if (url.find('pib.nic.in') != -1):
+            m = re.findall(r"(\=\d+)", url)
+            url = 'http://pib.nic.in/newsite/PrintRelease.aspx?relid' + m[0]
+            Finished = 1
+        if (url.find("thehindu") != -1):
+            url = url + '?css=print'
+            Finished = 1
+        if (url.find("mrunal") != -1):
+            url = url + '/print/'
+            Finished = 1
+        if (url.find("business-standard") != -1):
+            m = re.findall(r"(\d+_\d+)", url)
+            url = 'http://www.business-standard.com/article/printer-friendly-version?article_id=' + m[0]
+            Finished = 1
+        if Finished == 0:
+            url = 'http://www.readability.com/m?url=' + url
+        return url

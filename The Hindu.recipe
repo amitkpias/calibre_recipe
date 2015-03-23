@@ -1,0 +1,93 @@
+from __future__ import with_statement
+__license__ = 'GPL 3'
+__copyright__ = '2015, Amit <amitkp.ias@gmail.com>'
+
+from calibre.web.feeds.news import BasicNewsRecipe
+import string
+import time
+import re
+
+class TheHindu(BasicNewsRecipe):
+    title          = u'The Hindu'
+    language = 'en_IN'
+    oldest_article        = 1
+    __author__            = 'Amit'
+    max_articles_per_feed = 100
+    feeds          = []
+    remove_javascript = True
+    no_stylesheets = True
+    publisher              = 'thehindu.com'
+    auto_cleanup = True
+    extra_css = '''
+                    body{font-family: Arial,Helvetica,sans-serif}
+                    .dateline{font-size: 40%}
+                    .main-image{
+                            display: block;
+                            margin-left: auto;
+                            margin-right: auto;
+                            width:100%;
+                        }
+                    .author{font-size: 40%}
+                    .breadcr{font-size: 40%}
+                    .articleLead{font-size: 70%; font-style: italic;}
+                    .detail-title {font-size: 200%}
+                    .photo-caption { font-size: 60%; font-style: italic; }
+                '''
+    masthead_url  = 'http://www.thehindu.com/template/1-0-1/gfx/logo.jpg'
+
+    def is_accepted_entry(self,sec):
+        res = False
+        keep_list = [   'Front Page',
+                        'NATIONAL',
+                        #'NEW DELHI',
+                        'INTERNATIONAL',
+                        'OPINION',
+                        'BUSINESS',
+                        u'SCI-TECH & AGRI'
+                    ]
+        print "----> Checking :- " + sec
+        if sec in keep_list:
+            res = True
+            print "----> " + sec + " Required"
+        return res
+
+    def preprocess_raw_html(self, raw, url):
+        return raw.replace('<body><p>', '<p>').replace('</p></body>', '</p>')
+
+    def postprocess_html(self, soup, first_fetch):
+        for t in soup.findAll(['table', 'tr', 'td','center']):
+            t.name = 'div'
+        return soup
+        
+    def parse_index(self):
+        today = time.strftime('%Y-%m-%d')
+        soup = self.index_to_soup('http://www.thehindu.com/todays-paper/tp-index/?date=' + today)
+        div = soup.find(id='left-column')        
+        feeds = []
+        current_section = None
+        #current_articles = []
+        for x in div.findAll(['span','div']):
+            #A new Section starts
+            if x.name == 'span' and x.get('class', '') == 's-link':
+                section = self.tag_to_string(x)
+                if self.is_accepted_entry(section):
+                    current_section = section
+                    current_articles = []
+                    print "----> Section " + current_section + " Started"
+            #Add the news item to list
+            if current_section and x.get('class', '') == 'tpaper':
+                a = x.find( 'a', href=True )
+                if a is not None:
+                    current_articles.append({'url':a['href']+'?css=print',
+                    'title':self.tag_to_string(a), 
+                    'date': '',
+                    'description':''})
+                    print "----> Added Article :- " + a['href']
+            #End of Section
+            if x.name == 'div' and x.get('class', '') == 'line':
+                if current_section and current_articles:
+                    feeds.append((current_section, current_articles))
+                    print "----> Section " + current_section + " ended"
+                current_section = None 
+        #self.abort_recipe_processing("stopping parse_index")
+        return feeds
